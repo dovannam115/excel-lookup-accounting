@@ -75,16 +75,31 @@ elif option == "📄 Lookup theo mapping":
             mapping_df.columns.values[[2, 4, 6]] = ['target_col', 'match_col', 'compare_col']
 
             # Hàm mô phỏng chính xác công thức Excel MATCH(1,...)
+            def clean_text(val):
+                if isinstance(val, str):
+                    return val.strip().replace("\xa0", "").replace("\n", "").replace("\r", "")
+                return val
+            
             def lookup(row):
                 try:
-                    matches = mapping_df[
-                        (mapping_df['match_col'] == row['TENDM']) &
-                        (mapping_df['compare_col'].notnull()) &
-                        (row['DGVND'] != 0) &
-                        ((mapping_df['compare_col'] - row['DGVND']).abs() / row['DGVND'] <= error_threshold)
+                    tendm = clean_text(row['TENDM'])
+                    dgvnd = row['DGVND']
+            
+                    if dgvnd == 0 or pd.isna(dgvnd):
+                        return "Không tìm thấy"
+            
+                    mapping_df_clean = mapping_df.copy()
+                    mapping_df_clean['match_col'] = mapping_df_clean['match_col'].apply(clean_text)
+                    mapping_df_clean['compare_col'] = pd.to_numeric(mapping_df_clean['compare_col'], errors='coerce')
+            
+                    filtered = mapping_df_clean[
+                        (mapping_df_clean['match_col'] == tendm) &
+                        (mapping_df_clean['compare_col'].notnull()) &
+                        (abs(mapping_df_clean['compare_col'] - dgvnd) / dgvnd <= error_threshold)
                     ]
-                    if not matches.empty:
-                        return matches.iloc[0]['target_col']
+                    
+                    if not filtered.empty:
+                        return filtered.iloc[0]['target_col']
                     else:
                         return "Không tìm thấy"
                 except:
