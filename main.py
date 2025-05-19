@@ -5,13 +5,12 @@ from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 st.title("🔁 Excel Lookup Tool")
-st.markdown("Tải lên 2 file Excel: `BAN_RA.xlsx` và `NXT T4.xlsx`")
 
 ban_ra_file = st.file_uploader("📤 Upload file Bán ra", type=["xlsx"])
 nxt_t4_file = st.file_uploader("📤 Upload file NXT", type=["xlsx"])
 
 if ban_ra_file and nxt_t4_file:
-    if st.button("🚀 Chạy tra cứu"):
+    if st.button("🚀 Chạy Lookup"):
         # Đọc sheet cần tra cứu từ BAN_RA
         ban_ra_df = pd.read_excel(ban_ra_file, sheet_name="Smart_KTSC_OK")
 
