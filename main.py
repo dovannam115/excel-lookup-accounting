@@ -2,24 +2,25 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 st.title("🔁 Excel Lookup Tool")
 st.markdown("Tải lên 2 file Excel: `BAN_RA.xlsx` và `NXT T4.xlsx`")
 
-ban_ra_file = st.file_uploader("📤 Upload BAN_RA.xlsx", type=["xlsx"])
-nxt_t4_file = st.file_uploader("📤 Upload NXT T4.xlsx", type=["xlsx"])
+ban_ra_file = st.file_uploader("📤 Upload file Bán ra", type=["xlsx"])
+nxt_t4_file = st.file_uploader("📤 Upload file NXT", type=["xlsx"])
 
 if ban_ra_file and nxt_t4_file:
     if st.button("🚀 Chạy tra cứu"):
-        # Đọc sheet cần tra cứu từ file BAN_RA
+        # Đọc sheet cần tra cứu từ BAN_RA
         ban_ra_df = pd.read_excel(ban_ra_file, sheet_name="Smart_KTSC_OK")
 
-        # Đọc dữ liệu từ file NXT T4 (sheet F8_D, bỏ qua 22 dòng đầu)
+        # Đọc dữ liệu từ NXT T4
         nxt_t4_df = pd.read_excel(nxt_t4_file, sheet_name="F8_D", skiprows=22)
         nxt_t4_df.columns.values[[2, 4, 14]] = ['target_col', 'match_col', 'compare_col']
 
-        q_col = ban_ra_df.columns[16]  # tương đương Q2
-        z_col = ban_ra_df.columns[25]  # tương đương Z2
+        q_col = ban_ra_df.columns[16]
+        z_col = ban_ra_df.columns[25]
 
         results = []
         for _, row in ban_ra_df.iterrows():
@@ -33,26 +34,28 @@ if ban_ra_file and nxt_t4_file:
                 results.append(matched_row['target_col'])
             else:
                 results.append("Không tìm thấy")
-
-        # Thêm kết quả vào sheet
+        
         ban_ra_df['lookup_result'] = results
 
-        # Load tất cả sheet từ file gốc BAN_RA
-        ban_ra_file.seek(0)  # reset stream
-        with pd.ExcelFile(ban_ra_file) as xls:
-            all_sheets = {sheet: xls.parse(sheet) for sheet in xls.sheet_names}
+        # Load lại workbook gốc từ BAN_RA
+        ban_ra_file.seek(0)
+        wb = load_workbook(filename=ban_ra_file)
 
         # Ghi đè sheet Smart_KTSC_OK
-        all_sheets["Smart_KTSC_OK"] = ban_ra_df
+        if "Smart_KTSC_OK" in wb.sheetnames:
+            ws = wb["Smart_KTSC_OK"]
+            wb.remove(ws)
+        ws_new = wb.create_sheet("Smart_KTSC_OK")
 
-        # Ghi file Excel kết quả
+        for r in dataframe_to_rows(ban_ra_df, index=False, header=True):
+            ws_new.append(r)
+
+        # Ghi lại workbook vào output
         output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            for sheet_name, df in all_sheets.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+        wb.save(output)
         output.seek(0)
 
-        st.success("✅ Xử lý xong! Sheet `Smart_KTSC_OK` đã được cập nhật.")
+        st.success("✅ DONE")
         st.download_button(
             label="📥 Tải file kết quả",
             data=output,
