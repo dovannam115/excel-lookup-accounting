@@ -16,10 +16,7 @@ if option == "🔁 Lookup Bán ra & NXT":
 
     if ban_ra_file and nxt_t4_file:
         if st.button("🚀 Chạy Lookup"):
-            # Đọc sheet cần tra cứu từ BAN_RA
             ban_ra_df = pd.read_excel(ban_ra_file, sheet_name="Smart_KTSC_OK")
-
-            # Đọc dữ liệu từ NXT T4
             nxt_t4_df = pd.read_excel(nxt_t4_file, sheet_name="F8_D", skiprows=22)
             nxt_t4_df.columns.values[[2, 4, 14]] = ['target_col', 'match_col', 'compare_col']
 
@@ -41,20 +38,14 @@ if option == "🔁 Lookup Bán ra & NXT":
             
             ban_ra_df['lookup_result'] = results
 
-            # Load lại workbook gốc từ BAN_RA
             ban_ra_file.seek(0)
             wb = load_workbook(filename=ban_ra_file)
-
-            # Ghi đè sheet Smart_KTSC_OK
             if "Smart_KTSC_OK" in wb.sheetnames:
                 ws = wb["Smart_KTSC_OK"]
                 wb.remove(ws)
             ws_new = wb.create_sheet("Smart_KTSC_OK")
-
             for r in dataframe_to_rows(ban_ra_df, index=False, header=True):
                 ws_new.append(r)
-
-            # Ghi lại workbook vào output
             output = BytesIO()
             wb.save(output)
             output.seek(0)
@@ -72,30 +63,28 @@ elif option == "📄 Lookup theo mapping":
     data_file = st.file_uploader("📤 Upload file Data", type=["xlsx"], key="data")
     mapping_file = st.file_uploader("📤 Upload file Mapping", type=["xlsx"], key="mapping")
 
-    # ✅ Cho người dùng nhập phần trăm sai số cho phép
-    error_threshold = st.number_input("🔧 Nhập phần trăm sai số cho phép (vd: 0.03 = 3%)", min_value=0.0, max_value=1.0, value=0.03, step=0.01)
+    error_threshold = st.number_input("🔧 Nhập phần trăm sai số cho phép (vd: 3% là 0.03)", min_value=0.0, max_value=1.0, value=0.03, step=0.01)
 
     if data_file and mapping_file:
         if st.button("🚀 Chạy Lookup Mapping"):
             data_df = pd.read_excel(data_file)
             mapping_df = pd.read_excel(mapping_file)
 
-            # Gán tên cột tạm thời (tuỳ file bạn, có thể điều chỉnh)
+            # Đặt tên cột đúng theo yêu cầu
             data_df.columns.values[[0, 4]] = ['TENDM', 'DGVND']
             mapping_df.columns.values[[2, 4, 6]] = ['target_col', 'match_col', 'compare_col']
 
+            # Hàm mô phỏng chính xác công thức Excel MATCH(1,...)
             def lookup(row):
                 try:
-                    # Điều kiện: (match_col == A4) & (ABS(compare_col - E4)/E4 <= threshold)
-                    filtered = mapping_df[
+                    matches = mapping_df[
                         (mapping_df['match_col'] == row['TENDM']) &
                         (mapping_df['compare_col'].notnull()) &
                         (row['DGVND'] != 0) &
-                        (abs(mapping_df['compare_col'] - row['DGVND']) / row['DGVND'] <= error_threshold)
+                        ((mapping_df['compare_col'] - row['DGVND']).abs() / row['DGVND'] <= error_threshold)
                     ]
-                    
-                    if not filtered.empty:
-                        return filtered.iloc[0]['target_col']  # MATCH(1,...) lấy dòng đầu tiên
+                    if not matches.empty:
+                        return matches.iloc[0]['target_col']
                     else:
                         return "Không tìm thấy"
                 except:
@@ -109,5 +98,9 @@ elif option == "📄 Lookup theo mapping":
             output.seek(0)
 
             st.success("✅ Lookup thành công!")
-            st.download_button("📥 Tải file kết quả", data=output, file_name="data_lookup_result.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.download_button(
+                label="📥 Tải file kết quả",
+                data=output,
+                file_name="data_lookup_result.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
