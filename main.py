@@ -81,17 +81,21 @@ elif option == "📄 Lookup theo mapping":
             mapping_df = pd.read_excel(mapping_file)
 
             # Gán tên cột tạm thời (tuỳ file bạn, có thể điều chỉnh)
-            data_df.columns.values[[0, 4]] = ['col_a', 'col_e']
+            data_df.columns.values[[0, 4]] = ['TENDM', 'DGVND']
             mapping_df.columns.values[[2, 4, 6]] = ['target_col', 'match_col', 'compare_col']
 
             def lookup(row):
                 try:
-                    subset = mapping_df[
-                        (mapping_df['match_col'] == row['col_a']) &
-                        (abs(mapping_df['compare_col'] - row['col_e']) / row['col_e'] <= error_threshold)
+                    # Điều kiện: (match_col == A4) & (ABS(compare_col - E4)/E4 <= threshold)
+                    filtered = mapping_df[
+                        (mapping_df['match_col'] == row['TENDM']) &
+                        (mapping_df['compare_col'].notnull()) &
+                        (row['DGVND'] != 0) &
+                        (abs(mapping_df['compare_col'] - row['DGVND']) / row['DGVND'] <= error_threshold)
                     ]
-                    if not subset.empty:
-                        return subset.iloc[0]['target_col']
+                    
+                    if not filtered.empty:
+                        return filtered.iloc[0]['target_col']  # MATCH(1,...) lấy dòng đầu tiên
                     else:
                         return "Không tìm thấy"
                 except:
