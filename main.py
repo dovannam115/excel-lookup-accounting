@@ -5,6 +5,21 @@ from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 st.set_page_config(page_title="Excel Lookup Tool", layout="centered")
+
+page_bg_img = '''
+<style>
+body {
+    background-image: url("https://novajob.vn/uploads/recruitment/ntd/hoang_gia_luat_logo-1.png");
+    background-size: contain;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #f5f5f5;
+}
+</style>
+'''
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
 st.title("🔍 Excel Lookup Tool")
 
 option = st.radio("📌 Chọn chức năng", ["🔁 Lookup Bán ra & NXT", "📄 Lookup theo mapping"])
