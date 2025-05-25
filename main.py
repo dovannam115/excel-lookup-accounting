@@ -22,7 +22,7 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.title("🔍 Excel Lookup Tool")
 
-option = st.radio("📌 Chọn chức năng", ["🔁 Lookup Bán ra & NXT", "📄 Lookup theo mapping"])
+option = st.radio("📌 Chọn chức năng", ["🔁 Lookup Bán ra & NXT", "📄 Lookup Mua vào & NXT"])
 
 # --- Chức năng 1 ---
 if option == "🔁 Lookup Bán ra & NXT":
