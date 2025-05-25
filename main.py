@@ -74,7 +74,7 @@ if option == "🔁 Lookup Bán ra & NXT":
             )
 
 # --- Chức năng 2 ---
-elif option == "📄 Lookup theo mapping":
+elif option == "📄 Lookup Mua vào & NXT":
     data_file = st.file_uploader("📤 Upload file Data", type=["xlsx"], key="data")
     mapping_file = st.file_uploader("📤 Upload file Mapping", type=["xlsx"], key="mapping")
 
@@ -86,8 +86,8 @@ elif option == "📄 Lookup theo mapping":
             mapping_df = pd.read_excel(mapping_file)
 
             # Đặt tên cột đúng theo yêu cầu
-            data_df.columns.values[[0, 4]] = ['TENDM', 'DGVND']
-            mapping_df.columns.values[[2, 4, 6]] = ['target_col', 'match_col', 'compare_col']
+            data_df.columns.values[[16, 25]] = ['TENDM', 'DGVND']
+            mapping_df.columns.values[[2, 4, 14]] = ['target_col', 'match_col', 'compare_col']
 
             # Hàm mô phỏng chính xác công thức Excel MATCH(1,...)
             def clean_text(val):
